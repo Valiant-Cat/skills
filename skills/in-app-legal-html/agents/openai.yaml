@@ -1,0 +1,4 @@
+interface:
+  display_name: "In-App Legal HTML"
+  short_description: "Build in-app privacy and terms HTML"
+  default_prompt: "Use $in-app-legal-html to prepare privacy and terms pages for this app."
