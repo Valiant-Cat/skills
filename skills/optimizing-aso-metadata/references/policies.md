@@ -43,6 +43,8 @@ Primary sources:
 
 - <https://support.google.com/googleplay/android-developer/answer/9859152?hl=en>
 - <https://support.google.com/googleplay/android-developer/answer/16944162?hl=en>
+- <https://support.google.com/googleplay/android-developer/answer/9859455?hl=en>
+- <https://support.google.com/googleplay/android-developer/answer/15191715?hl=en>
 
 ### Rules that matter most for ASO
 
@@ -68,6 +70,8 @@ Primary sources:
 - If the app contains ads, subscriptions, or gated features, keep the commercial model consistent across copy, screenshots, and store settings.
 - Prefer less-invasive alternatives where the platform expects them, such as photo pickers or narrower media/location scopes.
 - Do not request broad photo/video or file access when a one-time picker or granular permission is enough.
+- If the app or any part of it is restricted by login, membership, location, or another gate, provide all details needed for reviewer access.
+- Reviewer access details should include a stable test account, credentials, and any special login instructions such as OTP, MFA, extra fields, or region requirements.
 
 ## Safe drafting checklist
 
@@ -81,3 +85,11 @@ Before shipping copy, confirm all of these:
 - no competitor names, trademark bait, or ranking bait are used in metadata
 
 When documenting permission analysis, include it inside the final ASO document rather than as a standalone permissions memo.
+If login exists, also include a `Google Play Review Access` section in the final ASO document with:
+
+- test account identifier
+- password or other reusable login secret if applicable
+- step-by-step login flow
+- OTP/MFA handling notes
+- region or device prerequisites
+- anything the reviewer must do after login to reach protected content

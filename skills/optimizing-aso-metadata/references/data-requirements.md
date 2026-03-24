@@ -14,6 +14,7 @@ Use this file when you need to define the minimum research packet for an ASO tas
 - pricing, subscriptions, ads, and trial structure
 - permissions and privacy policy
 - permission inventory with a plain-language reason for each sensitive permission
+- if login exists, at least one stable reviewer test account plus step-by-step login instructions
 
 If available, also collect:
 
@@ -22,6 +23,7 @@ If available, also collect:
 - top traffic countries
 - prior ASO tests and rejected copy
 - denied-permission fallback behavior in the shipped product
+- OTP, MFA, invite-only, region-lock, or paywall instructions needed for reviewer access
 
 ## Competitor set design
 
@@ -81,6 +83,7 @@ reports/
 ```
 
 The final ASO report should absorb permission analysis and compliance notes instead of splitting them into a separate markdown file.
+If the app has login-restricted content, the same final ASO report should also include reviewer access details for Google Play submission.
 
 ## Questions that the data should answer
 
@@ -92,3 +95,4 @@ The final ASO report should absorb permission analysis and compliance notes inst
 - Which claims are unsafe because the app, privacy policy, or permissions do not support them?
 - Which sensitive permissions are truly core to the product, and which ones should be removed or downgraded?
 - If a user denies a sensitive permission, what still works and what is the user-visible fallback?
+- If the app is behind login or other access controls, can a Google Play reviewer reach all relevant content with the provided account and instructions?

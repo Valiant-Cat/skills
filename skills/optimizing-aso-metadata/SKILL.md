@@ -51,6 +51,7 @@ Collect the smallest useful set of raw inputs:
 - existing metadata and screenshots
 - current description, changelog, privacy policy, permissions, pricing, and paywall model
 - a permission-to-feature matrix for every sensitive permission the app declares or might need, to be included in the final ASO document
+- if the app requires login, a reviewer-safe test account plus exact login steps for Google Play review
 - competitor store pages
 - Sensor Tower exports when scale, keyword, ranking, or review evidence matters
 
@@ -112,6 +113,7 @@ Before presenting final copy, verify:
 - privacy, offline, security, and AI claims match actual behavior and policy declarations
 - every sensitive permission maps to a user-facing feature with a clear necessity statement
 - the app requests the minimum permission scope and has a less-invasive fallback when policy expects one
+- if login gates any content, the final ASO document includes a reusable test account and step-by-step access instructions for Google Play reviewers
 - screenshots and previews show the real app experience
 - pricing, IAP, ads, and subscriptions are not hidden or misrepresented
 - competitor names, trademarks, rankings, and irrelevant phrases are not used to game search
@@ -123,7 +125,7 @@ If any claim cannot be verified, remove it or mark it as blocked.
 
 Default deliverables:
 
-1. one final ASO document that includes competitor evidence, keyword inventory, metadata recommendations, permission-to-feature mapping, and compliance risks
+1. one final ASO document that includes competitor evidence, keyword inventory, metadata recommendations, permission-to-feature mapping, login test access details when applicable, and compliance risks
 2. one to three copy variants per store if rewriting is requested
 
 ## Do Not
@@ -134,3 +136,4 @@ Default deliverables:
 - do not claim privacy, offline processing, or AI capabilities that are not clearly supported
 - do not add trademarked terms, competitor names, or promotional pricing language to metadata just to capture traffic
 - do not create a separate permissions markdown file; keep permission analysis inside the final ASO document
+- do not omit test credentials or reviewer steps when login, membership, region lock, or any other access gate exists
