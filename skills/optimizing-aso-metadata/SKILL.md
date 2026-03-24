@@ -23,6 +23,7 @@ Read these files as needed:
 - `references/data-requirements.md` for required inputs and export structure
 - `references/policies.md` before writing or reviewing metadata
 - `references/competitor-snapshot.md` for a concrete Sensor Tower-backed example
+- `references/sensitive-permissions.md` when the app touches photos, files, camera, microphone, contacts, location, or other protected data
 
 If Sensor Tower is relevant, also use [sensortower-research](../sensortower-research/SKILL.md).
 
@@ -50,6 +51,7 @@ Collect the smallest useful set of raw inputs:
 
 - existing metadata and screenshots
 - current description, changelog, privacy policy, permissions, pricing, and paywall model
+- a permission-to-feature matrix for every sensitive permission the app declares or might need
 - competitor store pages
 - Sensor Tower exports when scale, keyword, ranking, or review evidence matters
 
@@ -73,6 +75,7 @@ Create a short structured memo before writing copy:
 
 - product job-to-be-done
 - feature proof points that are actually shipped
+- permission proof points: which feature needs which permission, and what fallback exists if the user declines
 - search-intent buckets
 - keyword gaps vs direct competitors
 - screenshot and first-screen message gaps
@@ -108,6 +111,8 @@ Before presenting final copy, verify:
 
 - every claim maps to a real feature
 - privacy, offline, security, and AI claims match actual behavior and policy declarations
+- every sensitive permission maps to a user-facing feature with a clear necessity statement
+- the app requests the minimum permission scope and has a less-invasive fallback when policy expects one
 - screenshots and previews show the real app experience
 - pricing, IAP, ads, and subscriptions are not hidden or misrepresented
 - competitor names, trademarks, rankings, and irrelevant phrases are not used to game search
@@ -123,7 +128,8 @@ Default deliverables:
 2. keyword inventory with priority buckets
 3. store-specific metadata recommendations
 4. one to three copy variants per store if rewriting is requested
-5. compliance checklist with unresolved risks called out explicitly
+5. permission-to-feature justification table
+6. compliance checklist with unresolved risks called out explicitly
 
 ## Do Not
 

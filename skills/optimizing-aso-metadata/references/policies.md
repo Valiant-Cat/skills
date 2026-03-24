@@ -1,8 +1,10 @@
 # Store Policies And Metadata Constraints
 
-Checked on 2026-03-23.
+Checked on 2026-03-24.
 
 Use this file before writing or approving App Store or Google Play metadata.
+
+For a feature-level mapping of sensitive permissions, also read `sensitive-permissions.md`.
 
 ## Apple App Store
 
@@ -35,6 +37,7 @@ Primary sources:
 - Do not use competitor names or category labels as keyword bait.
 - Make screenshot overlays consistent with the shipped UI and real feature set.
 - If IAP or subscriptions matter to the value proposition, do not obscure that in the metadata.
+- If the app touches protected data or resources, its usage strings must explain clearly why that access is needed for a real user-facing feature.
 
 ## Google Play
 
@@ -57,6 +60,7 @@ Primary sources:
 - Data safety declarations must be clear and accurate for every app.
 - AI-generated-content features still have to comply with existing Google Play policies.
 - Intellectual property rules still apply to keywords, copy, screenshots, and branded comparisons.
+- Restricted and special permissions must be tied to a core user-facing use case, use the minimum scope necessary, and respect user denial.
 
 ### Practical implications
 
@@ -64,6 +68,8 @@ Primary sources:
 - Do not overstate privacy or data handling if the app requests broad file, photo, or cloud permissions.
 - Do not stuff synonyms into the first lines of the description.
 - If the app contains ads, subscriptions, or gated features, keep the commercial model consistent across copy, screenshots, and store settings.
+- Prefer less-invasive alternatives where the platform expects them, such as photo pickers or narrower media/location scopes.
+- Do not request broad photo/video or file access when a one-time picker or granular permission is enough.
 
 ## Safe drafting checklist
 
@@ -71,6 +77,7 @@ Before shipping copy, confirm all of these:
 
 - every major claim is supported by the real product
 - privacy and security claims match the privacy policy and store declarations
+- every sensitive permission has a feature-level justification and a user-readable reason
 - screenshots and previews show the real app experience
 - pricing and subscription references are current and not misleading
 - no competitor names, trademark bait, or ranking bait are used in metadata
