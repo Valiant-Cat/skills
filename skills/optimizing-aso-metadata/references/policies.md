@@ -4,8 +4,6 @@ Checked on 2026-03-24.
 
 Use this file before writing or approving App Store or Google Play metadata.
 
-For a feature-level mapping of sensitive permissions, also read `sensitive-permissions.md`.
-
 ## Apple App Store
 
 Primary sources:
@@ -81,3 +79,5 @@ Before shipping copy, confirm all of these:
 - screenshots and previews show the real app experience
 - pricing and subscription references are current and not misleading
 - no competitor names, trademark bait, or ranking bait are used in metadata
+
+When documenting permission analysis, include it inside the final ASO document rather than as a standalone permissions memo.

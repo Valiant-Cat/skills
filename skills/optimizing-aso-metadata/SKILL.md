@@ -23,7 +23,6 @@ Read these files as needed:
 - `references/data-requirements.md` for required inputs and export structure
 - `references/policies.md` before writing or reviewing metadata
 - `references/competitor-snapshot.md` for a concrete Sensor Tower-backed example
-- `references/sensitive-permissions.md` when the app touches photos, files, camera, microphone, contacts, location, or other protected data
 
 If Sensor Tower is relevant, also use [sensortower-research](../sensortower-research/SKILL.md).
 
@@ -51,7 +50,7 @@ Collect the smallest useful set of raw inputs:
 
 - existing metadata and screenshots
 - current description, changelog, privacy policy, permissions, pricing, and paywall model
-- a permission-to-feature matrix for every sensitive permission the app declares or might need
+- a permission-to-feature matrix for every sensitive permission the app declares or might need, to be included in the final ASO document
 - competitor store pages
 - Sensor Tower exports when scale, keyword, ranking, or review evidence matters
 
@@ -124,12 +123,8 @@ If any claim cannot be verified, remove it or mark it as blocked.
 
 Default deliverables:
 
-1. competitor table with evidence paths
-2. keyword inventory with priority buckets
-3. store-specific metadata recommendations
-4. one to three copy variants per store if rewriting is requested
-5. permission-to-feature justification table
-6. compliance checklist with unresolved risks called out explicitly
+1. one final ASO document that includes competitor evidence, keyword inventory, metadata recommendations, permission-to-feature mapping, and compliance risks
+2. one to three copy variants per store if rewriting is requested
 
 ## Do Not
 
@@ -138,3 +133,4 @@ Default deliverables:
 - do not invent keyword volume, rank, or growth numbers
 - do not claim privacy, offline processing, or AI capabilities that are not clearly supported
 - do not add trademarked terms, competitor names, or promotional pricing language to metadata just to capture traffic
+- do not create a separate permissions markdown file; keep permission analysis inside the final ASO document

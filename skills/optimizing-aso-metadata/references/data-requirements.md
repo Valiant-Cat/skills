@@ -74,12 +74,13 @@ research/
     kw-*.json
     reviews-*.json
 reports/
-  aso-research.md
+  final-aso-report.md
   keyword-inventory.csv
   store-copy-ios.md
   store-copy-android.md
-  compliance-checklist.md
 ```
+
+The final ASO report should absorb permission analysis and compliance notes instead of splitting them into a separate markdown file.
 
 ## Questions that the data should answer
 
