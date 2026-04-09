@@ -1,7 +1,7 @@
 interface:
   display_name: "ASO Metadata"
   short_description: "Research and rewrite compliant mobile store metadata."
-  default_prompt: "Use $optimizing-aso-metadata to research competitors, collect Sensor Tower evidence, and draft policy-compliant App Store and Google Play metadata."
+  default_prompt: "Use $optimizing-aso-metadata to research competitors and draft compliant App Store and Google Play metadata."
 
 policy:
   allow_implicit_invocation: true

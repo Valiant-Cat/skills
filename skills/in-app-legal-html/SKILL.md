@@ -11,6 +11,8 @@ Prepare app-embedded Privacy Policy and Terms of Service pages that match the pr
 
 This skill is for product-ready in-app legal content. It is not a substitute for legal counsel or for distribution-channel requirements such as a public privacy-policy URL in Google Play or App Store Connect disclosures.
 
+When the user or project provides a canonical developer name or support email, treat those values as mandatory source-of-truth inputs and propagate them consistently across app code, public legal pages, and store metadata. Do not silently substitute a repo owner name, GitHub issue tracker, or generic contact channel.
+
 ## Workflow
 
 1. Inspect the app before drafting.
@@ -53,8 +55,17 @@ This skill is for product-ready in-app legal content. It is not a substitute for
    - App Store submissions may require a privacy policy URL in App Store Connect and accurate App Privacy nutrition-label disclosures
    - if the app supports account creation, Apple requires account deletion initiation from within the app
    - sensitive permissions such as SMS must be justified by core functionality and reflected accurately in policy text
+   - do not describe the app as store-policy-compliant if account creation exists but there is no real user-facing account deletion initiation path
 
-5. Implement mobile-friendly static HTML.
+5. Resolve public URL uniqueness before deployment.
+   If Firebase Hosting or another public host is shared across multiple apps:
+   - prefer a dedicated hosting site for this app's legal pages
+   - if a dedicated site is unavailable, use app-specific public paths rather than shared roots such as `/privacy` or `/terms`
+   - update every source of truth together: hosting config, app constants, in-app entry points, ASO/store metadata, and any backend/express routes that expose the legal pages
+   - verify the chosen URL does not collide with another app's legal surface
+   - do not deploy a shared-root legal route for one app if it can override another app's public policy URLs
+
+6. Implement mobile-friendly static HTML.
    Prefer:
    - one HTML file per document
    - responsive layout
@@ -63,7 +74,7 @@ This skill is for product-ready in-app legal content. It is not a substitute for
    - high contrast in light and dark environments
    - polished but restrained styling; legal pages should feel trustworthy, not flashy
 
-6. Wire the pages into the app.
+7. Wire the pages into the app.
    On Android, the default pattern is:
    - store files under `app/src/main/assets/legal/`
    - create a legal document type/router model
@@ -76,12 +87,14 @@ This skill is for product-ready in-app legal content. It is not a substitute for
    - load the HTML in `WKWebView` or a native wrapper
    - expose entry points from Settings, About, Profile, or onboarding/account surfaces
 
-7. Verify before claiming completion.
+8. Verify before claiming completion.
    At minimum verify:
    - document route/asset mapping
    - build passes
    - the app can open both documents
    - text is readable on device
+   - the public privacy-policy URL and terms URL return the expected content with HTTP 200
+   - the app uses the same deployed URLs that store metadata uses; no stale domain or stale path remains
 
 ## Android Pattern
 
@@ -123,6 +136,8 @@ Recommended `WKWebView` posture:
 - Include a real contact email.
 - Match the app's actual sensitive-permission behavior.
 - Match the app's actual App Privacy / Data safety disclosures.
+- If the app supports account creation, cover password reset, account deletion handling, retention, and local-vs-remote data boundaries explicitly.
+- Distinguish local on-device data from remote account or backend data. Do not blur them together.
 - If the app is localized, start from a single accurate source version before translating.
 - Prefer direct, specific prose over generic legal boilerplate.
 
@@ -132,6 +147,8 @@ Recommended `WKWebView` posture:
 - Treating optional permissions as always-on collection
 - Hiding important disclosures behind vague phrases like "may collect data as needed"
 - Forgetting Firebase Analytics, FCM tokens, or cloud storage processors
+- Using shared hosting roots like `/privacy` or `/terms` for one app inside a multi-app Firebase project
+- Updating HTML and forgetting to update the deployed public URL in app constants or store metadata
 - Claiming store compliance while account deletion, App Privacy disclosures, or public policy URLs are still missing
 
 ## Done Criteria
@@ -141,5 +158,7 @@ This skill is complete when:
 - Privacy Policy and Terms are grounded in observed app behavior
 - both documents render well as static in-app HTML
 - both documents are reachable from the app UI
+- public legal URLs are unique for the app and do not override another app's legal URLs in a shared hosting environment
+- developer name and support email match the canonical values provided by the user or project
 - verification has been run
 - any remaining Google Play or App Store policy gaps are explicitly reported
