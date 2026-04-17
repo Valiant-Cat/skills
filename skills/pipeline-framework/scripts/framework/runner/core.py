@@ -4,7 +4,7 @@ import json
 import subprocess
 import shutil
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 from framework.adapters.common import (
     dispatch_dir,
@@ -321,6 +321,24 @@ def write_blocked_report(run_dir: Path, title: str, exc: Exception) -> None:
     )
 
 
+def _strict_preflight_failures(
+    capability_report: dict,
+    required_capabilities: Sequence[str] | None,
+) -> list[str]:
+    capabilities = capability_report.get("capabilities", {})
+    names = list(required_capabilities or capabilities.keys())
+    failures = []
+    for capability_name in names:
+        cap_info = capabilities.get(capability_name, {"status": "missing", "provider": "none"})
+        if cap_info.get("status") != "ready":
+            failures.append(capability_name)
+    return failures
+
+
+def _display_capability_name(capability_name: str) -> str:
+    return capability_name.replace("_", "-")
+
+
 def execute_skill_launcher(
     run_dir: Path,
     *,
@@ -328,6 +346,9 @@ def execute_skill_launcher(
     allow_mock: bool,
     allow_seed: bool,
     check_only: bool,
+    strict_check: bool = False,
+    required_capabilities: Sequence[str] | None = None,
+    strict_check_failures: Callable[[Path, Mapping[str, str], dict], Sequence[str]] | None = None,
     probe_capabilities,
     pipeline_script: Path,
     blocked_report_name: str,
@@ -340,6 +361,23 @@ def execute_skill_launcher(
     config = build_runtime_config(mode, allow_mock=allow_mock, allow_seed=allow_seed, check_only=check_only)
     capability_report = probe_capabilities(config, env=env)
     print(json.dumps(capability_report, ensure_ascii=False, indent=2))
+
+    failures = []
+    custom_failures = False
+    if strict_check:
+        if strict_check_failures is not None:
+            custom_failures = True
+            failures = list(strict_check_failures(run_dir, env, capability_report))
+        else:
+            failures = _strict_preflight_failures(capability_report, required_capabilities)
+    if failures:
+        if custom_failures:
+            missing = "; ".join(failures)
+        else:
+            missing = ", ".join(_display_capability_name(name) for name in failures)
+        exc = RuntimeError(f"strict-preflight-failed: missing or misconfigured capabilities: {missing}")
+        write_blocked_report(run_dir, blocked_report_name, exc)
+        return 2
 
     if config.check_only:
         return 0

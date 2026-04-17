@@ -26,6 +26,28 @@
 
 ## Common Configurations
 
+## Operator Gate
+
+所有正式执行都先经过同一个门禁：
+
+```bash
+python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check
+```
+
+放行规则：
+
+- 返回 `0`：关键 capability 已就绪，可以继续正式执行
+- 返回非 `0`：必须先补齐 provider、seed 或 response bundle，禁止把聊天内容当成正式阶段结果
+
+推荐执行路径：
+
+1. `strict-check -> codex-session`
+   - 适用于中间阶段已接入 `skill` / `mcp` / `cli` / `builtin`
+2. `strict-check -> --allow-seed`
+   - 适用于中间阶段结果先由外部系统、人工调研或上游流程产出，再由 framework 接管 provenance 与 commit
+3. `check-only -> dev-mock --allow-mock`
+   - 仅用于联调 adapter、runner 和状态机；不属于正式交付路径，默认不会通过 strict preflight
+
 ### 1. 最小 builtin + response bundle 组合
 
 适用场景：
@@ -38,6 +60,13 @@
 - `idea-brief` 和 `prd-generation` 默认走 `builtin`
 - `market-research` / `competitor-analysis` 通过 `.dispatch/*-response.json` 提供结果
 
+示例：
+
+```bash
+python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check
+python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --mode codex-session --allow-seed
+```
+
 ### 2. 市场调研走 CLI，竞品分析走 response bundle
 
 适用场景：
@@ -48,6 +77,8 @@
 示例：
 
 ```bash
+python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check
+
 export IDEA_TO_PRD_MARKET_RESEARCH_PROVIDER=cli
 export IDEA_TO_PRD_MARKET_RESEARCH_STATUS=ready
 export IDEA_TO_PRD_MARKET_RESEARCH_CLI_CMD='<market-research-cli-command>'
@@ -63,6 +94,8 @@ export IDEA_TO_PRD_MARKET_RESEARCH_CLI_CMD='<market-research-cli-command>'
 示例：
 
 ```bash
+python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check
+
 export IDEA_TO_PRD_MARKET_RESEARCH_PROVIDER=cli
 export IDEA_TO_PRD_MARKET_RESEARCH_STATUS=ready
 export IDEA_TO_PRD_MARKET_RESEARCH_CLI_CMD='<market-research-cli-command>'

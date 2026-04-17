@@ -58,6 +58,12 @@ description: Use when 需要把一个模糊产品想法、需求方向或机会�
 python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only
 ```
 
+执行阻断式预检：
+
+```bash
+python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check
+```
+
 正常执行整条流水线：
 
 ```bash
@@ -69,6 +75,14 @@ python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --mode codex-session
 ```bash
 python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --mode dev-mock --allow-mock
 ```
+
+## 强制执行协议
+
+- 用户显式要求使用 `idea-to-prd` 时，第一条实操命令必须是 `python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check`
+- `--strict-check` 未通过时，不得输出任何“阶段已完成”或“PRD 已生成”的结论；只能继续补齐 provider、seed 或 response bundle
+- `dev-mock` 仅用于本地联调，不属于正式交付路径；联调时可以使用普通 `--check-only` 或直接运行 `--mode dev-mock --allow-mock`
+- `brainstorming` 只能作为 `idea-brief` 阶段内部的需求收敛方法，不能替代流水线入口和阶段落盘
+- `idea-brief.*`、`market-research.*`、`competitor-analysis.*`、`prd.*` 未写入 `run_dir` 的正式产物路径时，视为该阶段未完成
 
 ## 何时使用
 
@@ -241,5 +255,3 @@ PRD 必须可直接作为下游设计或研发输入，避免停留在空泛描�
 - 是否给所有高风险判断补了来源、日期和市场范围
 - 功能需求是否带有明确验收标准，而不是只有功能名
 - 竞品数量是否与赛道成熟度匹配，而不是机械停在 3 个
-
-若用户没有要求直接写文件，也至少要按上述结构给出完整内容。
