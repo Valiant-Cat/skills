@@ -1,0 +1,4 @@
+interface:
+  display_name: "Idea To PRD"
+  short_description: "把产品想法推进为调研与 PRD"
+  default_prompt: "使用 idea-to-prd 把一个产品想法推进为市场调研、竞品分析、调研报告和 prd.md。"
