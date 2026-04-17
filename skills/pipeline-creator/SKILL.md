@@ -1,11 +1,11 @@
 ---
-name: pipeline-create
+name: pipeline-creator
 description: Use when 需要根据用户给出的业务阶段、产物和约束，直接生成一个基于 pipeline-framework 的可运行流水线 skill，目录结构、运行入口与测试骨架对齐 idea-to-prd。
 ---
 
-# Pipeline Create
+# Pipeline Creator
 
-`pipeline-create` 用来把用户的业务编排需求直接落成一个新的 `pipeline-framework` consumer skill。
+`pipeline-creator` 用来把用户的业务编排需求直接落成一个新的 `pipeline-framework` consumer skill。
 
 它不是只给建议，也不是只生成一份说明文档。标准目标是产出一个可运行、可继续修改、可补充 provider 的业务 skill 目录，至少包含：
 
@@ -48,7 +48,7 @@ description: Use when 需要根据用户给出的业务阶段、产物和约束�
 3. 运行生成器：
 
 ```bash
-python3 skills/pipeline-create/scripts/generate_pipeline_skill.py \
+python3 skills/pipeline-creator/scripts/generate_pipeline_skill.py \
   --spec <spec.json> \
   --output-root skills
 ```

@@ -177,7 +177,7 @@ def render_skill_md(spec: SkillSpec) -> str:
 
         ## Generated Notes
 
-        这个 skill 由 `pipeline-create` 生成，默认所有阶段先提供 `builtin` provider 以保证闭环可运行。
+        这个 skill 由 `pipeline-creator` 生成，默认所有阶段先提供 `builtin` provider 以保证闭环可运行。
 
         继续业务化时，优先补这些内容：
 

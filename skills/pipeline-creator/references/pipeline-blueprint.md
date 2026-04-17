@@ -1,6 +1,6 @@
 # Pipeline Blueprint
 
-`pipeline-create` 的输入是一个 JSON spec。最小示例：
+`pipeline-creator` 的输入是一个 JSON spec。最小示例：
 
 ```json
 {
