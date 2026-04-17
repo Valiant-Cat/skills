@@ -50,6 +50,28 @@ class ExamplePipelineRunPipelineTests(unittest.TestCase):
         self.assertTrue((run_dir / ".framework" / "provenance" / "seed-note.json").exists())
         self.assertTrue((run_dir / ".framework" / "state" / "stages" / "publish-note.json").exists())
 
+    def test_blocks_when_committed_seed_output_is_tampered(self):
+        run_dir = self.make_run_dir()
+        write_json(run_dir / ".dispatch" / "runtime-config.json", {"mode": "codex-session", "allow_mock": False, "check_only": False})
+        write_json(
+            run_dir / ".dispatch" / "capability-report.json",
+            {
+                "runtime": "codex-session",
+                "capabilities": {
+                    "example_seed_note": {"status": "ready", "provider": "builtin"},
+                    "example_publish_note": {"status": "ready", "provider": "builtin"},
+                },
+            },
+        )
+
+        first = self.run_pipeline(run_dir)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        (run_dir / "seed-note.json").write_text('{"tampered": true}\n', encoding="utf-8")
+
+        second = self.run_pipeline(run_dir)
+        self.assertNotEqual(second.returncode, 0)
+        self.assertIn("no longer matches provenance", second.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

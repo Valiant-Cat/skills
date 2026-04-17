@@ -71,6 +71,44 @@ def write_minimal_response_adapter(path: Path, stage: str, output_name: str):
     )
 
 
+def write_flaky_adapter(path: Path, stage: str, output_name: str, flag_name: str):
+    path.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env python3",
+                "from __future__ import annotations",
+                "import json",
+                "import os",
+                "import sys",
+                "from pathlib import Path",
+                "",
+                f"stage = {stage!r}",
+                f"output_name = {output_name!r}",
+                f"flag_name = {flag_name!r}",
+                "run_dir = Path(sys.argv[1])",
+                "if os.environ.get(flag_name) != '1':",
+                "    print('forced failure', file=sys.stderr)",
+                "    raise SystemExit(2)",
+                "staging_dir = run_dir / '.framework' / 'staging' / stage",
+                "staging_dir.mkdir(parents=True, exist_ok=True)",
+                "(staging_dir / output_name).write_text('ok\\n', encoding='utf-8')",
+                "print(json.dumps({",
+                "    'ok': True,",
+                "    'stage': stage,",
+                "    'tool': stage,",
+                "    'provider': 'builtin',",
+                "    'created': [output_name],",
+                "    'updated': [],",
+                "    'notes': 'ok',",
+                "    'retryable': False,",
+                "}, ensure_ascii=False))",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
 class RunnerCoreTests(unittest.TestCase):
     def make_run_dir(self) -> Path:
         tmp = tempfile.TemporaryDirectory()
@@ -202,6 +240,36 @@ class RunnerCoreTests(unittest.TestCase):
                 adapter_paths={"stage-a": adapter_a, "stage-b": adapter_b},
             )
 
+    def test_run_pipeline_stages_blocks_when_provenance_is_missing(self):
+        run_dir = self.make_run_dir()
+        write_json = lambda path, payload: path.parent.mkdir(parents=True, exist_ok=True) or path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        write_json(run_dir / ".dispatch" / "runtime-config.json", {"mode": "codex-session", "allow_mock": False, "allow_seed": False, "check_only": False})
+        adapter_dir = run_dir / "adapters"
+        adapter_dir.mkdir(parents=True, exist_ok=True)
+        adapter_a = adapter_dir / "stage_a.py"
+        adapter_b = adapter_dir / "stage_b.py"
+        write_adapter(adapter_a, "stage-a", "a.json")
+        write_adapter(adapter_b, "stage-b", "b.json")
+
+        first = run_pipeline_stages(
+            run_dir=run_dir,
+            stage_order=["stage-a"],
+            stage_inputs={"stage-a": []},
+            stage_outputs={"stage-a": ["a.json"]},
+            adapter_paths={"stage-a": adapter_a},
+        )
+        self.assertTrue(first["ok"])
+        (run_dir / ".framework" / "provenance" / "stage-a.json").unlink()
+
+        with self.assertRaisesRegex(RuntimeError, "has no committed provenance"):
+            run_pipeline_stages(
+                run_dir=run_dir,
+                stage_order=["stage-a", "stage-b"],
+                stage_inputs={"stage-a": [], "stage-b": ["a.json"]},
+                stage_outputs={"stage-a": ["a.json"], "stage-b": ["b.json"]},
+                adapter_paths={"stage-a": adapter_a, "stage-b": adapter_b},
+            )
+
     def test_run_pipeline_stages_blocks_when_uncommitted_output_exists_in_outputs(self):
         run_dir = self.make_run_dir()
         write_json = lambda path, payload: path.parent.mkdir(parents=True, exist_ok=True) or path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -222,6 +290,63 @@ class RunnerCoreTests(unittest.TestCase):
                 stage_outputs={"stage-a": ["a.json"], "stage-b": ["b.json"]},
                 adapter_paths={"stage-a": adapter_a, "stage-b": adapter_b},
             )
+
+    def test_rerun_after_failed_stage_preserves_committed_stage(self):
+        run_dir = self.make_run_dir()
+        write_json = lambda path, payload: path.parent.mkdir(parents=True, exist_ok=True) or path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        write_json(run_dir / ".dispatch" / "runtime-config.json", {"mode": "codex-session", "allow_mock": False, "allow_seed": False, "check_only": False})
+        adapter_dir = run_dir / "adapters"
+        adapter_dir.mkdir(parents=True, exist_ok=True)
+        adapter_a = adapter_dir / "stage_a.py"
+        adapter_b = adapter_dir / "stage_b.py"
+        write_adapter(adapter_a, "stage-a", "a.json")
+        write_flaky_adapter(adapter_b, "stage-b", "b.json", "PIPELINE_STAGE_B_READY")
+
+        first = run_pipeline_stages(
+            run_dir=run_dir,
+            stage_order=["stage-a"],
+            stage_inputs={"stage-a": []},
+            stage_outputs={"stage-a": ["a.json"]},
+            adapter_paths={"stage-a": adapter_a},
+        )
+        self.assertTrue(first["ok"])
+        stage_a_before = json.loads((run_dir / ".framework" / "provenance" / "stage-a.json").read_text(encoding="utf-8"))
+
+        with self.assertRaisesRegex(RuntimeError, "forced failure"):
+            run_pipeline_stages(
+                run_dir=run_dir,
+                stage_order=["stage-a", "stage-b"],
+                stage_inputs={"stage-a": [], "stage-b": ["a.json"]},
+                stage_outputs={"stage-a": ["a.json"], "stage-b": ["b.json"]},
+                adapter_paths={"stage-a": adapter_a, "stage-b": adapter_b},
+            )
+
+        self.assertEqual(
+            json.loads((run_dir / ".framework" / "state" / "stages" / "stage-a.json").read_text(encoding="utf-8"))["status"],
+            "COMMITTED",
+        )
+        self.assertFalse((run_dir / "b.json").exists())
+
+        old_value = os.environ.get("PIPELINE_STAGE_B_READY")
+        os.environ["PIPELINE_STAGE_B_READY"] = "1"
+        try:
+            second = run_pipeline_stages(
+                run_dir=run_dir,
+                stage_order=["stage-a", "stage-b"],
+                stage_inputs={"stage-a": [], "stage-b": ["a.json"]},
+                stage_outputs={"stage-a": ["a.json"], "stage-b": ["b.json"]},
+                adapter_paths={"stage-a": adapter_a, "stage-b": adapter_b},
+            )
+        finally:
+            if old_value is None:
+                os.environ.pop("PIPELINE_STAGE_B_READY", None)
+            else:
+                os.environ["PIPELINE_STAGE_B_READY"] = old_value
+
+        self.assertTrue(second["ok"])
+        self.assertTrue((run_dir / "b.json").exists())
+        stage_a_after = json.loads((run_dir / ".framework" / "provenance" / "stage-a.json").read_text(encoding="utf-8"))
+        self.assertEqual(stage_a_before["committed_outputs"], stage_a_after["committed_outputs"])
 
     def test_execute_skill_launcher_check_only_prints_probe_and_skips_pipeline(self):
         run_dir = self.make_run_dir()
