@@ -78,11 +78,17 @@ python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --mode dev-mock --allo
 
 ## 强制执行协议
 
-- 用户显式要求使用 `idea-to-prd` 时，第一条实操命令必须是 `python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check`
+- 当 Agent 已进入 `idea-to-prd` 执行时，第一条实操命令必须是 `python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-check`
 - `--strict-check` 未通过时，不得输出任何“阶段已完成”或“PRD 已生成”的结论；只能继续补齐 provider、seed 或 response bundle
 - `dev-mock` 仅用于本地联调，不属于正式交付路径；联调时可以使用普通 `--check-only` 或直接运行 `--mode dev-mock --allow-mock`
 - `brainstorming` 只能作为 `idea-brief` 阶段内部的需求收敛方法，不能替代流水线入口和阶段落盘
 - `idea-brief.*`、`market-research.*`、`competitor-analysis.*`、`prd.*` 未写入 `run_dir` 的正式产物路径时，视为该阶段未完成
+
+## 边界说明
+
+- 本 skill 保证的是进入本 skill 之后的 runtime contract 与阶段落盘契约。
+- 本 skill 不单独保证平台级 prompt routing 一定先选择本 skill。
+- 若需要验证提示词触发层，应使用本 skill 自带的 prompt regression 验证脚本与样例。
 
 ## 何时使用
 

@@ -48,6 +48,12 @@ python3 skills/idea-to-prd/scripts/run_skill.py <run_dir> --check-only --strict-
 3. `check-only -> dev-mock --allow-mock`
    - 仅用于联调 adapter、runner 和状态机；不属于正式交付路径，默认不会通过 strict preflight
 
+## Boundary of Enforcement
+
+- `strict-check` 只约束进入本 pipeline 后的首个实操动作。
+- `seed`、`cli`、`dev-mock` 都属于 pipeline 内部执行路径。
+- 用户提示词是否先命中本 skill，属于平台 orchestration 行为，不属于本 skill 的硬保证范围。
+
 ### 1. 最小 builtin + response bundle 组合
 
 适用场景：

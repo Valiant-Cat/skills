@@ -1,0 +1,35 @@
+[
+  {
+    "case_id": "explicit_idea_to_prd",
+    "prompt": "使用idea-to-prd，我想开发一款上门约妆的o2o模式的app",
+    "selected_idea_to_prd": true,
+    "events": [
+      {
+        "type": "open",
+        "target": "/Users/liam/.codex/superpowers/skills/using-superpowers/SKILL.md"
+      }
+    ]
+  },
+  {
+    "case_id": "explicit_idea_to_prd_seed",
+    "prompt": "使用idea-to-prd，先用seed方式，我想开发一款上门约妆的o2o模式的app",
+    "selected_idea_to_prd": true,
+    "events": [
+      {
+        "type": "command",
+        "target": "python3 skills/idea-to-prd/scripts/run_skill.py /tmp/run --check-only --strict-check --allow-seed"
+      }
+    ]
+  },
+  {
+    "case_id": "implicit_product_idea",
+    "prompt": "我想开发一款上门约妆的o2o模式的app",
+    "selected_idea_to_prd": false,
+    "events": [
+      {
+        "type": "open",
+        "target": "/Users/liam/.codex/superpowers/skills/brainstorming/SKILL.md"
+      }
+    ]
+  }
+]
