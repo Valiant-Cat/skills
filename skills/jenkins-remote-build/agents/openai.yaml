@@ -1,0 +1,4 @@
+interface:
+  display_name: "Jenkins Remote Build"
+  short_description: "触发通用 Jenkins 远程构建，并通过 CALLBACK_URL 或 Jenkins API 获取构建结果。"
+  default_prompt: "触发 Jenkins 远程构建并等待 CALLBACK_URL 返回结果"
