@@ -1,6 +1,9 @@
 ---
 name: jenkins-remote-build
-description: 通用 Jenkins 远程构建执行与结果收集。用于用户需要触发任意 Jenkins build/buildWithParameters 任务、传入 CALLBACK_URL、启动本地 callback 服务、等待 Jenkins 构建完成、从 callback 日志或 Jenkins API 获取构建结果、构建号、构建 URL、产物和状态时。
+description: 通用 Jenkins 远程构建执行与结果收集。用于用户需要触发任意 Jenkins build/buildWithParameters 任务、传入
+  CALLBACK_URL、启动本地 callback 服务、等待 Jenkins 构建完成、从 callback 日志或 Jenkins API 获取构建结果、构建号、构建
+  URL、产物和状态时。
+auto_install_policy: manual
 ---
 
 # Jenkins Remote Build
@@ -44,25 +47,55 @@ curl -X POST -u "USER_NAME:API_TOKEN" "JENKINS_URL/job/JOB_NAME/build?token=TOKE
 - 不要从配置文件加载：`token`、`jobName`、`params` / `parameters`。
 - 环境变量：`JENKINS_URL`、`JENKINS_USER_NAME`、`JENKINS_API_TOKEN`、`TOKEN_NAME`、`JOB_NAME`。
 - 运行时参数优先级最高，其次配置文件中的连接信息，最后环境变量。
+- 默认会读取用户级配置 `~/.config/jenkins-remote-build/config.json`；保存配置用 `save-config` 子命令，不要写入仓库。
+
+保存 Jenkins 连接信息：
+
+```bash
+python scripts/jenkins_remote_build.py save-config \
+  --jenkins-url "$JENKINS_URL" \
+  --username "$JENKINS_USER_NAME" \
+  --api-token "$JENKINS_API_TOKEN"
+```
 
 ## 推荐流程
 
 1. 明确 Jenkins 构建入口：
-   - 无参数任务通常是 `https://jenkins.example.com/job/<job>/build`
-   - 参数化任务通常是 `https://jenkins.example.com/job/<job>/buildWithParameters`
-2. 启动 callback 服务：
+   - 默认使用 `--build-endpoint auto`，会先读取 job 元数据。
+   - 发现参数化任务时自动使用 `buildWithParameters`，否则使用 `build`。
+   - 如果 job 元数据读取失败，按传入端点执行。
+2. 查看 job 参数默认值：
+
+```bash
+python scripts/jenkins_remote_build.py job-info \
+  --job-name "demo"
+```
+
+输出包含 `parameterDefaults` 与自动选择的 `autoBuildEndpoint`。
+
+如果 job 是参数化任务，或最终构建端点是 `buildWithParameters`，且用户没有显式提供任何 `--param`、`--params-json` 或 `--params-file`，即使 Jenkins 有默认参数，也不得直接触发。脚本会输出 `confirmationRequired: true`、可获取到的 `parameterDefaults` 和 `parameterPrompt`，此时必须停止并把参数确认提示展示给用户。
+
+参数确认提示必须包含：
+
+- 默认参数键值。
+- `missingRequiredParameters` 中列出的缺失必填参数候选；为空时说明未检测到缺失必填参数。
+- 用户可选回复：`使用默认参数构建`、覆盖一个或多个参数（如 `BUILD_BRANCH=xxx`）、或取消构建。
+
+用户选择 `使用默认参数构建` 时，Agent 必须把 `defaultBuildParams` 全量展开成显式 `--param KEY=VALUE` 后再触发。用户只覆盖一个或多个参数时，Agent 必须先用覆盖值合并默认参数，再把合并后的完整参数集全量展开为显式 `--param KEY=VALUE`。不得在未获得用户选择时触发构建。
+
+3. 启动 callback 服务：
 
 ```bash
 python scripts/callback_server.py --host 0.0.0.0 --port 8000 --log-file callback.log
 ```
 
-3. 准备 Jenkins 可访问的 callback 地址，例如：
+4. 准备 Jenkins 可访问的 callback 地址，例如：
 
 ```text
 http://<本机可访问IP>:8000/callback?requestId=<唯一请求ID>
 ```
 
-4. 先生成并检查触发 URL：
+5. 先生成并检查触发 URL：
 
 ```bash
 python scripts/jenkins_remote_build.py url \
@@ -74,7 +107,7 @@ python scripts/jenkins_remote_build.py url \
   --param ENV=qa
 ```
 
-5. 触发构建：
+6. 触发构建：
 
 ```bash
 python scripts/jenkins_remote_build.py trigger \
@@ -110,6 +143,8 @@ python scripts/jenkins_remote_build.py trigger \
   --api-token "$JENKINS_API_TOKEN"
 ```
 
+通常不需要手动指定 `--build-endpoint build`；`auto` 会基于 job 元数据选择正确端点。
+
 也可以使用配置文件：
 
 ```json
@@ -130,7 +165,19 @@ python scripts/jenkins_remote_build.py trigger \
   --callback-url "http://<本机可访问IP>:8000/callback?requestId=req-001"
 ```
 
-6. 等待结果，优先使用 callback 日志；如果触发响应拿到 `queueUrl` 或已知 `buildUrl`，可同时启用 Jenkins API 兜底：
+7. 一键触发并等待结果，自动启动本地 callback 服务、生成 `requestId`、触发构建、等待 callback 或 Jenkins API，并在结束时关闭 callback 服务：
+
+```bash
+python scripts/jenkins_remote_build.py run \
+  --job-name "$JOB_NAME" \
+  --token "$TOKEN_NAME" \
+  --callback-public-base "http://<本机可访问IP>:8000" \
+  --param BRANCH=main
+```
+
+若 Jenkins 无法访问本机 callback，可加 `--no-callback`，仅使用 Jenkins API 轮询。
+
+8. 等待结果，优先使用 callback 日志；如果触发响应拿到 `queueUrl` 或已知 `buildUrl`，可同时启用 Jenkins API 兜底：
 
 ```bash
 python scripts/jenkins_remote_build.py wait-result \
@@ -181,7 +228,10 @@ post {
 
 - `scripts/callback_server.py`：启动本地 HTTP 服务，记录所有 GET/POST 到 JSONL 日志。
 - `scripts/jenkins_remote_build.py url`：只生成 URL，不触发构建。
+- `scripts/jenkins_remote_build.py save-config`：保存用户级 Jenkins 连接信息。
+- `scripts/jenkins_remote_build.py job-info`：读取 job 元数据和参数默认值。
 - `scripts/jenkins_remote_build.py trigger`：触发 Jenkins 构建，输出 HTTP 状态、`queueUrl` 和触发 URL。
+- `scripts/jenkins_remote_build.py run`：一键启动 callback、触发构建、等待结果并清理 callback。
 - `scripts/jenkins_remote_build.py wait-result`：等待 callback 或 Jenkins API 结果，输出结构化 JSON。
 
 常用参数：
@@ -189,8 +239,9 @@ post {
 - `--job-url`：Jenkins `build` / `buildWithParameters` 地址。
 - `--jenkins-url`：Jenkins 根地址；可由配置文件 `jenkinsUrl` 或环境变量 `JENKINS_URL` 提供。
 - `--job-name`：Jenkins job 名；多级 folder 用 `/` 分隔；运行时传入，或由环境变量 `JOB_NAME` 提供。
-- `--build-endpoint`：构建端点，默认 `buildWithParameters`；无参数任务使用 `build`。
+- `--build-endpoint`：构建端点，默认 `auto`；参数化任务自动使用 `buildWithParameters`，无参数任务使用 `build`。
 - `--config`：Jenkins JSON 配置文件，只支持 `jenkinsUrl`、`username`、`apiToken`。
+- `--no-default-params`：不从 Jenkins job 参数定义中自动带入默认值。
 - `--token`：Jenkins 远程触发 token，可为空。
 - `--callback-url`：传给 Jenkins job 的回调地址。
 - `--callback-param`：回调参数名，默认 `CALLBACK_URL`。
@@ -201,8 +252,9 @@ post {
 ## 安全规则
 
 - 不要硬编码 Jenkins 用户名、密码、API Token 或内网地址到仓库文件。
-- 配置文件只保存 Jenkins 连接信息，不保存 `token`、`jobName` 或构建参数。
+- 配置文件只保存 Jenkins 连接信息，不保存 `token`、`jobName` 或构建参数；默认保存到 `~/.config/jenkins-remote-build/config.json`，权限应为 `0600`。
 - 不要重复触发同一构建，除非用户明确要求重新触发。
+- 参数化 job 未收到用户显式构建参数时，必须展示默认参数并等待用户明确给出参数；不得用默认参数自动触发。
 - callback 日志必须按 `requestId`、`buildNumber` 或 `jobName` 过滤，不能盲取最后一行。
 - 触发前先用 `url` 子命令展示最终 URL，确认参数、token 和 callback 编码正确。
 - 如果 callback 超时，先检查 Jenkins 是否真的调用了 `CALLBACK_URL`，再用 Jenkins API 轮询兜底。

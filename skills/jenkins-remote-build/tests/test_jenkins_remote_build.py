@@ -7,7 +7,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from jenkins_remote_build import add_common_trigger_args, build_job_url, build_trigger_url, load_jenkins_config, load_params, parse_callback_record, resolve_value
+from jenkins_remote_build import (
+    add_common_trigger_args,
+    build_job_url,
+    build_trigger_url,
+    default_config_path,
+    extract_parameter_defaults,
+    build_parameter_prompt,
+    load_jenkins_config,
+    load_params,
+    parse_callback_record,
+    default_parameter_confirmation_required,
+    resolve_build_endpoint,
+    resolve_value,
+)
 
 
 class JenkinsRemoteBuildTests(unittest.TestCase):
@@ -107,7 +120,11 @@ class JenkinsRemoteBuildTests(unittest.TestCase):
         self.assertEqual(resolve_value("", config, "jenkinsUrl", "JENKINS_URL", {}), "https://base.example.com")
 
     def test_load_config_supports_jenkins_url_environment_variable(self):
-        config = load_jenkins_config("", env={"JENKINS_URL": "https://env.example.com"})
+        config = load_jenkins_config(
+            "",
+            env={"JENKINS_URL": "https://env.example.com"},
+            default_config=ROOT / "tests" / "missing_default_config.json",
+        )
 
         self.assertEqual(resolve_value("", config, "jenkinsUrl", "JENKINS_URL", {}), "https://env.example.com")
 
@@ -119,6 +136,102 @@ class JenkinsRemoteBuildTests(unittest.TestCase):
 
         self.assertEqual(args.jenkins_url, "https://jenkins.example.com")
         self.assertFalse(hasattr(args, "base_url"))
+
+    def test_load_config_reads_default_user_config_before_environment(self):
+        default_path = ROOT / "tests" / "tmp_default_jenkins_config.json"
+        default_path.write_text(
+            json.dumps(
+                {
+                    "jenkinsUrl": "https://default.example.com",
+                    "username": "default-user",
+                    "apiToken": "default-token",
+                }
+            ),
+            encoding="utf-8",
+        )
+        try:
+            config = load_jenkins_config("", env={"JENKINS_URL": "https://env.example.com"}, default_config=default_path)
+        finally:
+            default_path.unlink()
+
+        self.assertEqual(config["jenkinsUrl"], "https://default.example.com")
+        self.assertEqual(config["username"], "default-user")
+        self.assertEqual(config["apiToken"], "default-token")
+
+    def test_default_config_path_is_user_config_file(self):
+        self.assertTrue(str(default_config_path()).endswith(".config/jenkins-remote-build/config.json"))
+
+    def test_extract_parameter_defaults_from_job_metadata(self):
+        metadata = {
+            "property": [
+                {
+                    "parameterDefinitions": [
+                        {"name": "BUILD_BRANCH", "defaultParameterValue": {"value": "dev"}},
+                        {"name": "BIND_PACKAGE", "defaultParameterValue": {"value": "com.example.app"}},
+                        {"name": "CALLBACK_URL", "defaultParameterValue": {"value": ""}},
+                    ]
+                }
+            ]
+        }
+
+        defaults = extract_parameter_defaults(metadata)
+
+        self.assertEqual(
+            defaults,
+            {
+                "BUILD_BRANCH": "dev",
+                "BIND_PACKAGE": "com.example.app",
+                "CALLBACK_URL": "",
+            },
+        )
+
+    def test_resolve_build_endpoint_uses_parameters_when_auto_or_build_requested(self):
+        metadata = {"property": [{"parameterDefinitions": [{"name": "BUILD_BRANCH"}]}]}
+
+        self.assertEqual(resolve_build_endpoint("auto", metadata), "buildWithParameters")
+        self.assertEqual(resolve_build_endpoint("build", metadata), "buildWithParameters")
+
+    def test_resolve_build_endpoint_uses_build_for_non_parameterized_auto(self):
+        self.assertEqual(resolve_build_endpoint("auto", {"property": []}), "build")
+
+    def test_resolve_build_endpoint_falls_back_to_build_with_parameters_when_metadata_missing(self):
+        self.assertEqual(resolve_build_endpoint("auto", {}), "buildWithParameters")
+
+    def test_default_params_merge_before_cli_params(self):
+        params = load_params(["BUILD_BRANCH=main"], default_params={"BUILD_BRANCH": "dev", "ENV": "qa"})
+
+        self.assertEqual(params, {"BUILD_BRANCH": "main", "ENV": "qa"})
+
+    def test_default_parameter_confirmation_required_when_job_has_params_but_user_passed_none(self):
+        args = argparse.Namespace(param=[], params_json="", params_file="")
+        metadata = {"property": [{"parameterDefinitions": [{"name": "BUILD_BRANCH"}]}]}
+
+        self.assertTrue(default_parameter_confirmation_required(args, metadata))
+
+    def test_default_parameter_confirmation_not_required_when_user_passes_param(self):
+        args = argparse.Namespace(param=["BUILD_BRANCH=main"], params_json="", params_file="")
+        metadata = {"property": [{"parameterDefinitions": [{"name": "BUILD_BRANCH"}]}]}
+
+        self.assertFalse(default_parameter_confirmation_required(args, metadata, "buildWithParameters"))
+
+    def test_default_parameter_confirmation_required_for_build_with_parameters_when_metadata_missing(self):
+        args = argparse.Namespace(param=[], params_json="", params_file="")
+
+        self.assertTrue(default_parameter_confirmation_required(args, {}, "buildWithParameters"))
+
+    def test_build_parameter_prompt_lists_defaults_missing_required_and_allowed_replies(self):
+        prompt = build_parameter_prompt(
+            job_name="demo",
+            build_endpoint="buildWithParameters",
+            parameter_defaults={"BUILD_BRANCH": "dev", "BIND_PACKAGE": "com.example", "REMARK": ""},
+            missing_required=["API_KEY"],
+        )
+
+        self.assertEqual(prompt["missingRequiredParameters"], ["API_KEY"])
+        self.assertEqual(prompt["defaultBuildParams"]["BUILD_BRANCH"], "dev")
+        self.assertIn("使用默认参数构建", prompt["allowedUserReplies"])
+        self.assertIn("BUILD_BRANCH=xxx", prompt["overrideExamples"])
+        self.assertIn("--param BUILD_BRANCH=dev", prompt["defaultParamsAsCliArgs"])
 
 
 if __name__ == "__main__":
