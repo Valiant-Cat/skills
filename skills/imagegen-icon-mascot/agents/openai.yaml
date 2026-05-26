@@ -1,0 +1,4 @@
+interface:
+  display_name: "Imagegen Icon Mascot"
+  short_description: "Generate polished 3D app icons and mascots"
+  default_prompt: "Use $imagegen-icon-mascot to create a beautiful, clickable app icon for my product."
