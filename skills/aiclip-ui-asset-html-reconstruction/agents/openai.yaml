@@ -1,0 +1,4 @@
+interface:
+  display_name: "AiClip UI Asset HTML Reconstruction"
+  short_description: "Reconstruct UI design images into transparent assets and pixel-aligned HTML"
+  default_prompt: "Use this skill to convert detailed UI design screenshots into transparent PNG assets, assets.json geometry, and pixel-aligned HTML for later Flutter/Android/iOS implementation."

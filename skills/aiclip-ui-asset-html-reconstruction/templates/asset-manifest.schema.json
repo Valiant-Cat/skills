@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AiClip Derived Generated Assets Manifest",
+  "type": "object",
+  "required": ["version", "source", "sourceSize", "assets"],
+  "properties": {
+    "version": { "const": "generated-assets-1.0" },
+    "source": { "type": "string" },
+    "sourceSize": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "file", "sourceBBox"],
+        "properties": {
+          "id": { "type": "string" },
+          "file": { "type": "string" },
+          "assetName": { "type": "string" },
+          "type": { "type": "string" },
+          "sourceBBox": { "$ref": "#/$defs/bbox" },
+          "htmlBBox": { "$ref": "#/$defs/bbox" },
+          "sheetBBox": { "$ref": "#/$defs/bbox" },
+          "cropSearchBBox": { "$ref": "#/$defs/bbox" },
+          "pipeline": { "enum": ["crop", "ai-chroma"] },
+          "prompt": { "type": "string" },
+          "semanticName": { "type": "string" },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "needsReview": { "type": "boolean" },
+              "score": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bbox": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number", "exclusiveMinimum": 0 },
+        { "type": "number", "exclusiveMinimum": 0 }
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    }
+  }
+}
