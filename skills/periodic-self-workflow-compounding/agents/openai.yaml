@@ -1,0 +1,4 @@
+interface:
+  display_name: "定期自我流程沉淀"
+  short_description: "Find repeated work worth packaging"
+  default_prompt: "Use $periodic-self-workflow-compounding to review recent work and package high-confidence repeated workflows."
