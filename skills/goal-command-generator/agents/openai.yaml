@@ -1,0 +1,4 @@
+interface:
+  display_name: "Goal Command Generator"
+  short_description: "Turn unfinished requirements into Goal commands"
+  default_prompt: "Use $goal-command-generator to turn the current unfinished requirements into a copy-ready Codex Goal command."
