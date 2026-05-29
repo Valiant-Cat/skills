@@ -1,4 +1,4 @@
 interface:
-  display_name: "Pipeline Creator"
-  short_description: "生成基于 pipeline-framework 的业务流水线 skill"
-  default_prompt: "Use $pipeline-creator to generate a runnable business pipeline skill based on pipeline-framework."
+  display_name: "Workflow Creator"
+  short_description: "生成可运行的标准化工作流 Skill"
+  default_prompt: "Use $pipeline-creator to generate a runnable standard workflow Skill with stages, artifacts, templates, runtime starter, and contract tests."
