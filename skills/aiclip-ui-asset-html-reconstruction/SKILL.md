@@ -161,6 +161,13 @@ Do not let this gate break the AiClip contract. If the task is `exact`, the sour
 @media (max-width: 390px) { .stage { transform: scale(calc(100vw / 390)); } }
 ```
 
+**Important Flutter / mobile implementation rule:** the fixed pixel geometry above is only for the intermediate HTML reconstruction and screenshot comparison. When translating the reconstructed HTML into production Flutter UI, do not copy literal HTML/source-pixel widths and heights into app widgets. Global apps must handle small phones, large phones, foldables, tablets, different DPRs, localization expansion, and accessibility text scaling.
+
+- Do not introduce highly specific fixed `width`, `height`, `SizedBox(width/height: exact)`, hardcoded card/panel heights, image dimensions, or source-pixel margins just because they appeared in the HTML reconstruction.
+- Match hierarchy, proportions, rhythm, and visual intent using responsive Flutter layout: `LayoutBuilder`, `MediaQuery`, `Flexible`/`Expanded`, `AspectRatio`, `FractionallySizedBox`, adaptive breakpoints, content-driven sizing, and `ConstrainedBox` with tokenized min/max ranges.
+- Prefer project design tokens for spacing, radius, typography, shadows, and tap targets. If a fixed dimension is unavoidable for a true primitive such as a small icon, hairline border, or minimum accessible tap target, keep it tokenized or clearly justified by platform/design-system rules rather than copied from the source image.
+- For Flutter app restoration, fidelity means preserving visual priority and behavior across devices, not reproducing the HTML's exact pixel box sizes.
+
 2. **Place every extracted asset at its source bbox.**
 
 ```html
